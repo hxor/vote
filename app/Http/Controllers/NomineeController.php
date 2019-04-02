@@ -4,9 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Nominee;
 use Illuminate\Http\Request;
+use DataTables;
 
 class NomineeController extends Controller
 {
+    private $model;
+    public function __construct()
+    {
+        $this->model = new Nominee();
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -14,7 +21,7 @@ class NomineeController extends Controller
      */
     public function index()
     {
-        //
+        return view('pages.nominee.index');
     }
 
     /**
@@ -24,7 +31,8 @@ class NomineeController extends Controller
      */
     public function create()
     {
-        //
+        $model = $this->model;
+        return view('pages.nominee.form', compact('model'));
     }
 
     /**
@@ -35,7 +43,13 @@ class NomineeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->validate($request, [
+            'number_id' => 'required|string|unique:nominees,number_id',
+            'name' => 'required|string|max:255',
+        ]);
+
+        $model = $this->model->create($request->all());
+        return $model;
     }
 
     /**
@@ -46,7 +60,8 @@ class NomineeController extends Controller
      */
     public function show(Nominee $nominee)
     {
-        //
+        $model = $nominee;
+        return view('pages.nominee.show', compact('model'));
     }
 
     /**
@@ -57,7 +72,8 @@ class NomineeController extends Controller
      */
     public function edit(Nominee $nominee)
     {
-        //
+        $model = $nominee;
+        return view('pages.nominee.form', compact('model'));
     }
 
     /**
@@ -69,7 +85,12 @@ class NomineeController extends Controller
      */
     public function update(Request $request, Nominee $nominee)
     {
-        //
+        $this->validate($request, [
+            'number_id' => 'required|string|unique:nominees,number_id,' . $nominee->id,
+            'name' => 'required|string|max:255',
+        ]);
+
+        $nominee->update($request->all());
     }
 
     /**
@@ -80,6 +101,26 @@ class NomineeController extends Controller
      */
     public function destroy(Nominee $nominee)
     {
-        //
+        $nominee->delete();
+    }
+
+    /**
+     * 
+     */
+    public function table()
+    {
+        $model = $this->model->query();
+        return DataTables::of($model)
+            ->addColumn('action', function ($model) {
+                return view('layouts._action', [
+                    'model' => $model,
+                    'url_show' => route('nominee.show', $model->id),
+                    'url_edit' => route('nominee.edit', $model->id),
+                    'url_destroy' => route('nominee.destroy', $model->id)
+                ]);
+            })
+            ->addIndexColumn()
+            ->rawColumns(['action'])
+            ->make(true);
     }
 }

@@ -18,3 +18,11 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::group(['prefix' => 'master', 'middleware' => ['auth']], function () {
+    Route::resource('nominee', 'NomineeController');
+});
+
+Route::group(['prefix' => 'table', 'middleware' => ['auth']], function () {
+    Route::get('/nominee', 'NomineeController@table')->name('table.nominee');
+});
